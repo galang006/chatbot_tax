@@ -2,7 +2,7 @@ from llama_cpp import Llama
 
 # Load model GGUF
 llm = Llama(
-    model_path="/home/ubuntu/projek_chatbot_galang/training_model/model/taxbot_v7.gguf",
+    model_path="/home/ubuntu/projek_chatbot_galang/training_model/model/taxbot_v8.gguf",
     #n_gpu_layers=50,        
     n_ctx=4096,            
     verbose=False
@@ -38,7 +38,7 @@ def infer(question):
     return text
 
 
-q = "Apa itu pajak?"
+q = "Apa sanksi atas keterlambatan pelaporan SPT Tahunan badan?"
 print(infer(q))
 
 #{"messages": [{"role": "system", "content": "Kamu adalah asisten ahli pajak Indonesia. Jawaban harus faktual dan menyebutkan sumber hukum (pasal/UU) di akhir."}, {"role": "user", "content": "Jadi, apa sih yang dimaksud dengan \"pajak\" itu sebenarnya?"}, {"role": "assistant", "content": "Pajak adalah kontribusi wajib kepada negara yang terutang oleh orang pribadi atau badan, bersifat memaksa berdasarkan Undang-Undang, dengan tidak mendapatkan imbalan secara langsung dan digunakan untuk keperluan negara bagi sebesar-besarnya kemakmuran rakyat, sesuai dengan Pasal 1 Ayat 1 UU Nomor 28 Tahun 2007.\nSource: Pasal 1 Ayat 1 UU Nomor 28 Tahun 2007"}]}

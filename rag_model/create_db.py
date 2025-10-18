@@ -6,8 +6,8 @@ import json
 import os
 import shutil
 
-CHROMA_PATH = "chroma_uu_db_v2"
-FOLDER_PATH = "/home/ubuntu/projek_chatbot_galang/process_dataset/dataset/uu"  
+CHROMA_PATH = "database/chroma_uu_db_v3"
+FOLDER_PATH = "/home/ubuntu/projek_chatbot_galang/process_dataset/dataset/uu_per_ayat"  
 
 def load_documents():
     documents = []
@@ -19,7 +19,6 @@ def load_documents():
                 for data in data_list:     
                     text = f"""
                     Isi: {data.get('Isi', '')}
-                    Penjelasan: {data.get('Penjelasan', '')}
                     Sumber: UU {data.get('UU', '')}, {data.get('Pasal', '')}, Ayat {data.get('Ayat', '')}, {data.get('Sumber', '')}, Aturan Terkait: {data.get('AturanTerkait', '')}
                     """
                     doc = Document(

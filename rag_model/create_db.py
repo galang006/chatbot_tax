@@ -6,7 +6,7 @@ import json
 import os
 import shutil
 
-CHROMA_PATH = "database/chroma_uu_db_v3"
+CHROMA_PATH = "database/chroma_uu_db_indo"
 FOLDER_PATH = "/home/ubuntu/projek_chatbot_galang/process_dataset/dataset/uu_per_ayat"  
 
 def load_documents():
@@ -19,7 +19,7 @@ def load_documents():
                 for data in data_list:     
                     text = f"""
                     Isi: {data.get('Isi', '')}
-                    Sumber: UU {data.get('UU', '')}, {data.get('Pasal', '')}, Ayat {data.get('Ayat', '')}, {data.get('Sumber', '')}, Aturan Terkait: {data.get('AturanTerkait', '')}
+                    Penjelasan: {data.get('Penjelasan', '')}
                     """
                     doc = Document(
                         page_content=text,
@@ -51,9 +51,10 @@ def save_to_chroma(chunks):
         shutil.rmtree(CHROMA_PATH)
     
     embeddings = HuggingFaceEmbeddings(
-        model_name="sentence-transformers/all-MiniLM-L6-v2"
+        model_name="LazarusNLP/all-indo-e5-small-v4"
     )
-    db = Chroma.from_documents(
+
+    Chroma.from_documents(
         chunks,
         embeddings,
         persist_directory=CHROMA_PATH

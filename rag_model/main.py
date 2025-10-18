@@ -4,7 +4,7 @@ from llama_cpp import Llama
 from tqdm import tqdm
 import time
 
-CHROMA_PATH = "database/chroma_uu_db_v3"
+CHROMA_PATH = "database/chroma_uu_db_indo"
 
 llm = Llama(
     model_path="/home/ubuntu/projek_chatbot_galang/training_model/model/taxbot_v8.gguf",
@@ -36,11 +36,11 @@ def build_context_from_db(db, query, top_k=5):
         scores.append(score)
         meta = doc.metadata
         context_texts.append(
-            # f"UU: {meta.get('uu', '')}\n"
-            # f"BAB: {meta.get('bab', '')}\n"
-            # f"{meta.get('pasal', '')}\n"
-            # f"Ayat: {meta.get('ayat', '')}\n"
-            # f"Sumber: {meta.get('sumber', '')}"
+            f"UU: {meta.get('uu', '')}\n"
+            f"BAB: {meta.get('bab', '')}\n"
+            f"{meta.get('pasal', '')}\n"
+            f"Ayat: {meta.get('ayat', '')}\n"
+            f"Sumber: {meta.get('sumber', '')}"
             f"{doc.page_content}\n"
             f"Relevance Score: {score:.2f}"
         )
@@ -118,7 +118,8 @@ def main(question):
     query_text = question
 
     embedding_function = HuggingFaceEmbeddings(
-        model_name="sentence-transformers/all-MiniLM-L6-v2",
+        # model_name="sentence-transformers/all-MiniLM-L6-v2",
+        model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
         model_kwargs={"device": "cpu"}
     )
     db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
@@ -136,4 +137,4 @@ def main(question):
     llm.close()
 
 if __name__ == "__main__":
-    main("Pajak adalah kontribusi wajib kepada?")
+    main("Apa yang dimaksud dengan Pajak?")

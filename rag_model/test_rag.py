@@ -1,59 +1,37 @@
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
-import re
-
-CHROMA_PATH = "chroma_uu_db_v2"
-
 from llama_cpp import Llama
+from tqdm import tqdm
 
-# Load model GGUF
+CHROMA_PATH = "database/chroma_uu_db_v2"
+
 llm = Llama(
-    model_path="/home/ubuntu/projek_chatbot_galang/training_model/model/taxbot_v7.gguf",
-    #n_gpu_layers=50,        
-    n_ctx=4096,            
+    model_path="/home/ubuntu/projek_chatbot_galang/training_model/model/taxbot_v8.gguf",
+    n_ctx=4096,
     verbose=False
 )
 
-def extract_keywords(question):
-    # Hilangkan kata-kata umum (stopwords sederhana)
-    stopwords = {"apa", "bagaimana", "dengan", "atas", "dan", "terhadap", "dari", "di", "yang"}
-    words = re.findall(r'\b\w+\b', question.lower())
-    keywords = [w for w in words if w not in stopwords]
-    return keywords
-
-def is_context_specific(context, question, threshold=0.5):
-    # Cek Pasal/Ayat dulu
-    import re
-    if re.search(r'Pasal \d+.*Ayat \d+', context, re.IGNORECASE):
-        return True
-
-    # Cek keyword matching
-    keywords = extract_keywords(question)
-    matches = sum(1 for kw in keywords if kw.lower() in context.lower())
-    if matches / len(keywords) >= threshold:
-        return True
-
-    return False
 def format_llama_cpp_chat(messages):
     text = ""
     for msg in messages:
         role = msg["role"]
         content = msg["content"]
         text += f"<|im_start|>{role}\n{content}<|im_end|>\n"
-    text += "<|im_start|>assistant\n"  
+    text += "<|im_start|>assistant\n"
     return text
 
 def build_context_from_db(db, query, top_k=5):
     """
-    Ambil top_k dokumen relevan dari Chroma DB
-    dan gabungkan page_content + metadata sebagai context
+    Ambil dokumen relevan dari Chroma DB + hitung skor rata-rata
     """
     results = db.similarity_search_with_relevance_scores(query, k=top_k)
-    if not results:
-        return "Maaf, tidak ada data yang relevan ditemukan."
+    if len(results) == 0 or results[0][1] < 0.4:
+        return "Maaf, tidak ada data yang relevan ditemukan.", "none"
 
     context_texts = []
+    scores = []
     for doc, score in results:
+        scores.append(score)
         meta = doc.metadata
         context_texts.append(
             f"UU: {meta.get('uu', '')}\n"
@@ -64,20 +42,59 @@ def build_context_from_db(db, query, top_k=5):
             f"Isi dan Penjelasan:\n{doc.page_content}\n"
             f"Relevance Score: {score:.2f}"
         )
-    return "\n\n---\n\n".join(context_texts)
 
-def infer(question, context):
+    max_score = max(scores)
+    
+    if max_score >= 0.75:
+        answer_type = "specific" 
+    elif max_score >= 0.4 and max_score < 0.75:
+        answer_type = "complex"
+
+    return "\n\n---\n\n".join(context_texts), answer_type
+
+def infer(question, context, answer_type="specific"):
     """
-    Jalankan LLaMA dengan prompt RAG
+    Jalankan LLaMA dengan prompt sesuai tipe jawaban
     """
+    SYSTEM_TEMPLATE = f"""Answer the question based only on the following context:
+    {context}
+    Kamu adalah asisten ahli pajak Indonesia.
+    Jawaban harus faktual dan to the point
+    Gunakan bahasa formal
+    Jika informasi tidak ada atau pertanyaan tidak ada hubungannya dengan pajak, jawab: 'Maaf, saya tidak memiliki pemahaman tentang hal itu.'
+
+    Tipe Jawaban: {answer_type}.
+    if (tipe jawaban = specific):
+    Sertakan sumber pasal di akhir kalimat dengan cara yang natural, misal: "sesuai dengan Pasal .. UU Nomor .. Tahun ....".
+    Sertakan sumber hukum dengan format Source: Pasal {{pasal}} Ayat {{ayat}} UU {{uu}}.
+
+    else if (tipe jawaban = complex):
+    FORMAT JAWABAN AKHIR:
+
+    Sources Used:
+    {{sumber}}
+    [Daftar sumber UU yang digunakan (minimal 2)]
+
+    Summary:
+    [Rangkuman inti analisis]
+
+    PILIH SATU BAGIAN SAJA di bawah ini, lalu isi dengan teks yang relevan:
+
+    [[ Conclusion ]]
+    [Tulis kesimpulan, JIKA analisis berfokus pada ringkasan temuan dan implikasi logis dari data yang ada.]
+
+    ATAU
+
+    [[ Recommendation ]]
+    [Tulis rekomendasi, JIKA analisis berfokus pada usulan aksi, kebijakan, atau langkah perbaikan di masa depan.]
+
+    else if (tipe jawaban = none):
+    FORMAT JAWABAN AKHIR:
+    Jawab: 'Maaf, saya tidak memiliki pemahaman tentang hal itu.'
+    """
+
     messages = [
-         {"role": "system", "content": (
-            f"Answer the question based only on the following context:\n{context}\n"
-            "Kamu adalah asisten ahli pajak Indonesia. "
-            "Jawaban harus faktual, hanya berdasarkan context yang diberikan, "
-            "sertakan sumber hukum dengan format: Pasal {pasal} Ayat {ayat} UU {uu}. "
-            "Jika informasi tidak ada, jawab: 'Maaf, saya tidak memiliki pemahaman tentang hal itu.'"
-        )},
+        {"role": "system", "content": SYSTEM_TEMPLATE},
         {"role": "user", "content": question}
     ]
     prompt = format_llama_cpp_chat(messages)
@@ -93,21 +110,21 @@ def infer(question, context):
     return text
 
 def main():
-    query_text = "Apa yang dimaksud dengan Pajak?"
-    
+    query_text = "Apa yang dimaksud Planet Pluto?"
+
     embedding_function = HuggingFaceEmbeddings(
         model_name="sentence-transformers/all-MiniLM-L6-v2",
         model_kwargs={"device": "cpu"}
     )
     db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
 
-    context = build_context_from_db(db, query_text, top_k=5)
+    context, answer_type = build_context_from_db(db, query_text, top_k=5)
 
-    print("=== Context Retrieved ===")
-    print(context[:1000] + "...\n") 
+    print(f"=== Context Retrieved (type: {answer_type}) ===")
+    print(context[:1000] + "...\n")
 
-    response = infer(query_text, context)
-    print("=== LLaMA Response ===")
+    response = infer(query_text, context, answer_type)
+    print("=== Chatbot Response ===")
     print(response)
     llm.close()
 

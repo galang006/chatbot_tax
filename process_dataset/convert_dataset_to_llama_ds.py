@@ -1,6 +1,6 @@
 import json
 
-INPUT_JSONL = "dataset/uu_generated.jsonl"   # dataset hasil generate
+INPUT_JSONL = "/home/ubuntu/projek_chatbot_galang/process_dataset/dataset/dataset_v4.jsonl"  
 OUTPUT_JSONL = "dataset/uu_llama_dataset.jsonl"
 
 SYSTEM_TEMPLATE = """Answer the question based only on the following context:
@@ -19,8 +19,8 @@ tipe = complex
 FORMAT JAWABAN AKHIR:
 
 Sources Used:
-{sumber}
-[Daftar sumber yang digunakan (minimal 2)]
+{{sumber}}
+[Daftar sumber UU yang digunakan (minimal 2)]
 
 Summary:
 [Rangkuman inti analisis]

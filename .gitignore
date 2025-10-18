@@ -1,0 +1,9 @@
+/venv
+/process_dataset/dataset
+/llama.cpp
+/rag_model/database
+/rag_model/model
+/training_model/dataset
+/training_model/model
+/training_model/unsloth_compiled_cache
+.env

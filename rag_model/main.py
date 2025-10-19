@@ -4,11 +4,11 @@ from llama_cpp import Llama
 from tqdm import tqdm
 import time
 
-CHROMA_PATH = "database/chroma_uu_db_indo"
+CHROMA_PATH = "database/chroma_uu_db_indo_v2"
 
 llm = Llama(
-    model_path="/home/ubuntu/projek_chatbot_galang/training_model/model/taxbot_v8.gguf",
-    n_ctx=4096,
+    model_path="/home/ubuntu/projek_chatbot_galang/rag_model/model/taxbot_v8.gguf",
+    n_ctx=2048,
     verbose=False,
     device = "cpu"
 )
@@ -26,58 +26,66 @@ def build_context_from_db(db, query, top_k=5):
     """
     Ambil dokumen relevan dari Chroma DB + hitung skor rata-rata
     """
-    results = db.similarity_search_with_relevance_scores(query, k=top_k)
-    if len(results) == 0 or results[0][1] < 0.3:
+    results = db.similarity_search_with_score(query, k=top_k)
+    if len(results) == 0 or results[0][1] > 13:
         return "Maaf, tidak ada data yang relevan ditemukan.", "none"
 
+    elif results[0][1] <= 9:
+        answer_type = "specific" 
+    elif results[0][1] > 9 and results[0][1] <= 13:
+        answer_type = "complex"
+    else:
+        answer_type = "none"
+
     context_texts = []
+    source_list = []
     scores = []
     for doc, score in results:
         scores.append(score)
         meta = doc.metadata
         context_texts.append(
-            f"UU: {meta.get('uu', '')}\n"
-            f"BAB: {meta.get('bab', '')}\n"
-            f"{meta.get('pasal', '')}\n"
-            f"Ayat: {meta.get('ayat', '')}\n"
-            f"Sumber: {meta.get('sumber', '')}"
             f"{doc.page_content}\n"
+        )
+        source_texts = (
+            f"{meta.get('uu', '')} "
+            f"{meta.get('pasal', '')} "
+            f"Ayat: {meta.get('ayat', '')}\n"
+            f"Sumber: {meta.get('sumber', '')}; "
             f"Relevance Score: {score:.2f}"
         )
+        source_list.append(source_texts)
 
-    max_score = max(scores)
-    
-    if max_score >= 0.5:
-        answer_type = "specific" 
-    elif max_score >= 0.3 and max_score < 0.5:
-        answer_type = "complex"
-    else:
-        answer_type = "none"
+    return context_texts, source_list, answer_type
 
-    return "\n\n---\n\n".join(context_texts), answer_type
-
-def infer(question, context, answer_type="specific"):
+def infer(question, context, source,answer_type="specific"):
     """
     Jalankan LLaMA dengan prompt sesuai tipe jawaban
     """
-    if answer_type == "none":
-        return "Maaf, saya tidak memiliki pemahaman tentang hal itu."
-    
     SYSTEM_TEMPLATE = f"""
+    Jawab pertanyaan berdasarkan konteks berikut:
+    {context}
+
     Kamu adalah asisten ahli pajak Indonesia.
-    Jawaban harus faktual dan to the point dan gunakan bahasa formal.
+    Jawaban harus faktual, to the point, dan menggunakan bahasa formal.
+    Jika informasi tidak ada atau pertanyaan tidak berkaitan dengan pajak,
+    jawab: "Maaf, saya tidak memiliki pemahaman tentang hal itu."
 
-    Tipe Jawaban: {answer_type}.
-    if (tipe jawaban = specific):
-    Sertakan sumber pasal dari context di akhir kalimat dengan cara yang natural, misal: "sesuai dengan Pasal .. UU Nomor .. Tahun ....".
-    Sertakan sumber hukum dari context dengan format Source: Pasal {{pasal}} Ayat {{ayat}} UU {{uu}}.
+    Sumber konteks: {source}
 
-    else if (tipe jawaban = complex):
-    FORMAT JAWABAN AKHIR:
+    ------------------------------------------------------------
+    Bila jawaban ditemukan dengan jelas di konteks:
+    - Sertakan sumber pasal di akhir kalimat dengan cara yang natural,
+    misalnya: "sesuai dengan Pasal ... UU Nomor ... Tahun ....".
+    - Sertakan sumber hukum dengan format:
+    Source: Pasal {{pasal}} Ayat {{ayat}} UU {{uu}}.
+
+    ------------------------------------------------------------
+    Bila jawaban tidak ditemukan dengan jelas di konteks:
+    Gunakan FORMAT JAWABAN AKHIR berikut:
 
     Sources Used:
-    {{sumber}}
-    [Daftar sumber UU dari context yang digunakan (minimal 2)]
+    {source}
+    [Daftar sumber UU yang digunakan (minimal 2)]
 
     Summary:
     [Rangkuman inti analisis]
@@ -85,15 +93,15 @@ def infer(question, context, answer_type="specific"):
     PILIH SATU BAGIAN SAJA di bawah ini, lalu isi dengan teks yang relevan:
 
     [[ Conclusion ]]
-    [Tulis kesimpulan, JIKA analisis berfokus pada ringkasan temuan dan implikasi logis dari data yang ada.]
+    [Tulis kesimpulan, JIKA analisis berfokus pada ringkasan temuan
+    dan implikasi logis dari data yang ada.]
 
     ATAU
 
     [[ Recommendation ]]
-    [Tulis rekomendasi, JIKA analisis berfokus pada usulan aksi, kebijakan, atau langkah perbaikan di masa depan.]
-
-    Answer the question based only on the following context:
-    {context}
+    [Tulis rekomendasi, JIKA analisis berfokus pada usulan aksi,
+    kebijakan, atau langkah perbaikan di masa depan.]
+    ------------------------------------------------------------
     """
 
     messages = [
@@ -119,22 +127,32 @@ def main(question):
 
     embedding_function = HuggingFaceEmbeddings(
         # model_name="sentence-transformers/all-MiniLM-L6-v2",
-        model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+        model_name="/home/ubuntu/projek_chatbot_galang/training_model/model/all-indo-e5-small-v4-matryoshka-v2",
         model_kwargs={"device": "cpu"}
     )
     db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
 
-    context, answer_type = build_context_from_db(db, query_text, top_k=5)
+    context, source, answer_type = build_context_from_db(db, query_text, top_k=5)
+    context_combined = "\n\n---\n\n".join(context)
 
-    print(f"=== Context Retrieved (type: {answer_type}) ===")
-    print(context[:500] + "...\n")
+    if answer_type != 'none':
+        print(f"=== Context Retrieved (type: {answer_type}) ===")
+        for i in range(3):
+            print(f"--- Context {i+1} ---")
+            print(context[i][:500].strip())  # tampilkan potongan isi
+            print(f"\n📚 Source: {source[i]}\n")
+            print("-" * 60)
 
-    response = infer(question, context, answer_type)
-    print("=== Chatbot Response ===")
-    print(response)
+        response = infer(question, context_combined, source, answer_type)
+        print("=== Chatbot Response ===")
+        print(response)
+    
+    else:
+       print("Maaf, saya tidak memiliki pemahaman tentang hal itu.")
+
     end_total = time.time()
     print("Total Runtime :", f"{end_total - start_total:.2f} detik")
     llm.close()
 
 if __name__ == "__main__":
-    main("Apa yang dimaksud dengan Pajak?")
+    main("Siapa saja yang termasuk subjek pajak dalam negeri?")

@@ -6,6 +6,8 @@ Model utama yang digunakan adalah **SeaLLMs-v3-1.5B-Chat**, yang di-*fine-tune* 
 
 Sistem RAG dikembangkan dengan menggunakan model embedding **LazarusNLP/all-indo-e5-small-v4**, yang juga di-*fine-tune* menggunakan **synthetic dataset** hasil generate dari model **Llama 3.1:8B**, dan seluruh proses retrieval dilakukan melalui **ChromaDB**.
 
+---
+
 ## 📁 Struktur Folder
 
 ### **1. base_model/**
@@ -172,9 +174,17 @@ Daftar Undang-Undang yang digunakan:
      ```
 
 6. **Generate Dataset untuk Fine-Tuning Embedding Model**
-   - Menggunakan skrip `generate_dataset_rag.py` dan model **Llama 3.1:8B**.  
-   - Dari **4033 chunk**, setiap chunk dengan panjang >50 token digenerate **3 pertanyaan**.  
-   - Menghasilkan total **11.370 baris dataset**:
+   - Menggunakan skrip `generate_dataset_rag.py` dengan model **Llama 3.1:8B**.  
+   - Format output dataset:
+     ```json
+     {
+       "global_chunk_id": "",
+       "text": "",
+       "questions": ""
+     }
+     ```
+   - Dari total **4.033 chunk**, setiap chunk dengan panjang lebih dari **50 token** digenerate sebanyak **3 pertanyaan**.  
+   - Menghasilkan total **11.370 baris dataset** yang disimpan pada:
      ```
      training_model/dataset/generated_qa_dataset_v2.jsonl
      ```

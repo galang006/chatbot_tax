@@ -186,6 +186,24 @@ Daftar Undang-Undang yang digunakan:
 5. **Pembuatan Chroma Database**
    - Menggunakan **embedding model** `LazarusNLP/all-indo-e5-small-v4`  
    - Chunk size: **500**  
+   - Format data yang digunakan untuk setiap dokumen:
+   ```
+    text = f"""
+    Isi: {data.get('Isi', '')}
+    Penjelasan: {data.get('Penjelasan', '')}
+    """
+
+    doc = Document(
+        page_content=text,
+        metadata={
+            "uu": data.get("UU", ""),
+            "bab": data.get("BAB", ""),
+            "pasal": data.get("Pasal", ""),
+            "ayat": data.get("Ayat", ""),
+            "sumber": data.get("Sumber", "")
+        }
+    )
+   ```
    - Hasil database:
      ```
      chatbot/database/chroma_uu_db_indo_v2

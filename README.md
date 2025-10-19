@@ -1,4 +1,4 @@
-# 📘 Projek Chatbot Galang — RAG untuk UU Perpajakan Indonesia
+# Projek Chatbot Galang — RAG untuk UU Perpajakan Indonesia
 
 Proyek ini membangun chatbot berbasis **Retrieval-Augmented Generation (RAG)** untuk menjawab pertanyaan terkait **Undang-Undang Perpajakan di Indonesia**.  
 
@@ -8,7 +8,7 @@ Sistem RAG dikembangkan dengan menggunakan model embedding **LazarusNLP/all-indo
 
 ---
 
-## 📁 Struktur Folder
+## Struktur Folder
 
 ---
 
@@ -100,7 +100,7 @@ training_model/
 - **Python 3.10+**
 
 ---
-## 📂 Sumber Dataset
+## Sumber Dataset
 
 Dataset diambil dari artikel DDTC:  
 🔗 [10 UU Perpajakan yang Saat Ini Berlaku di Indonesia, Kamu Harus Tahu](https://news.ddtc.co.id/berita/nasional/1803971/10-uu-perpajakan-yang-saat-ini-berlaku-di-indonesia-kamu-harus-tahu)
@@ -119,9 +119,9 @@ Daftar Undang-Undang yang digunakan:
 
 ---
 
-## 🔄 Alur Proyek
+## Alur Proyek
 
-### 🧩 A. Preprocessing Data
+### A. Preprocessing Data
 
 1. **Ekstraksi & Pembersihan Data**
    - Data diambil dari sumber DDTC, kemudian dilakukan **preprocessing dan cleaning**.  
@@ -177,7 +177,7 @@ Daftar Undang-Undang yang digunakan:
 
 ---
 
-### 🧠 B. Pembuatan dan Fine-Tuning RAG Model
+### B. Pembuatan dan Fine-Tuning RAG Model
 
 5. **Pembuatan Chroma Database**
    - Menggunakan **embedding model** `LazarusNLP/all-indo-e5-small-v4`  
@@ -219,7 +219,7 @@ Daftar Undang-Undang yang digunakan:
 
 ---
 
-## 📊 Hasil Akhir
+## Hasil Akhir
 
 - Chat model: `taxbot_v8.gguf`
 - Embedding model: `all-indo-e5-small-v4-matryoshka-v2`

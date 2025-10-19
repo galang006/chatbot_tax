@@ -26,9 +26,10 @@ def build_context_from_db(db, query, top_k=5):
     """
     Ambil dokumen relevan dari Chroma DB + hitung skor rata-rata
     """
+    
     results = db.similarity_search_with_score(query, k=top_k)
     if len(results) == 0 or results[0][1] > 13:
-        return "Maaf, tidak ada data yang relevan ditemukan.", "none"
+        return "Maaf, tidak ada data yang relevan ditemukan.", ["none"], "none"
 
     elif results[0][1] <= 9:
         answer_type = "specific" 
@@ -40,6 +41,7 @@ def build_context_from_db(db, query, top_k=5):
     context_texts = []
     source_list = []
     scores = []
+
     for doc, score in results:
         scores.append(score)
         meta = doc.metadata
@@ -135,12 +137,12 @@ def main(question):
     context_combined = "\n\n---\n\n".join(context)
 
     if answer_type != 'none':
-        # print(f"=== Context Retrieved (type: {answer_type}) ===")
-        # for i in range(3):
-        #     print(f"--- Context {i+1} ---")
-        #     print(context[i][:500].strip()) 
-        #     print(f"\n📚 Source: {source[i]}\n")
-        #     print("-" * 60)
+        print(f"=== Context Retrieved (type: {answer_type}) ===")
+        for i in range(3):
+            print(f"--- Context {i+1} ---")
+            print(context[i][:500].strip()) 
+            print(f"\n📚 Source: {source[i]}\n")
+            print("-" * 60)
 
         response = infer(question, context_combined, source, answer_type)
         print("=== Chatbot Response ===")
@@ -157,5 +159,11 @@ if __name__ == "__main__":
         question = input("User: ")
         if question.lower() in ["exit", "quit"]:
             print("Bye!")
+            try:
+                llm.close()
+            except Exception:
+                pass
             break
         main(question)
+    
+    

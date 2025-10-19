@@ -1,7 +1,10 @@
 # 📘 Projek Chatbot Galang — RAG untuk UU Perpajakan Indonesia
 
 Proyek ini membangun chatbot berbasis **Retrieval-Augmented Generation (RAG)** untuk menjawab pertanyaan terkait **Undang-Undang Perpajakan di Indonesia**.  
-Model utama yang digunakan adalah **SeaLLMs-v3-1.5B-Chat**, yang di-fine-tune menggunakan **synthetic dataset** hasil generate dari model **Gemma 3:4B**, dan digabungkan dengan sistem **RAG** menggunakan fine-tune model **LazarusNLP/all-indo-e5-small-v4** yang di-fine-tune menggunakan **synthetic dataset** hasil generate dari model **llama3.1:8b** berbasis **ChromaDB**.
+
+Model utama yang digunakan adalah **SeaLLMs-v3-1.5B-Chat**, yang di-*fine-tune* menggunakan **synthetic dataset** hasil generate dari model **Gemma 3:4B**.  
+
+Sistem RAG dikembangkan dengan menggunakan model embedding **LazarusNLP/all-indo-e5-small-v4**, yang juga di-*fine-tune* menggunakan **synthetic dataset** hasil generate dari model **Llama 3.1:8B**, dan seluruh proses retrieval dilakukan melalui **ChromaDB**.
 
 ## 📁 Struktur Folder
 

@@ -126,22 +126,21 @@ def main(question):
     query_text = question
 
     embedding_function = HuggingFaceEmbeddings(
-        # model_name="sentence-transformers/all-MiniLM-L6-v2",
         model_name="model/all-indo-e5-small-v4-matryoshka-v2",
         model_kwargs={"device": "cpu"}
     )
     db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
 
-    context, source, answer_type = build_context_from_db(db, query_text, top_k=5)
+    context, source, answer_type = build_context_from_db(db, query_text, top_k=3)
     context_combined = "\n\n---\n\n".join(context)
 
     if answer_type != 'none':
-        print(f"=== Context Retrieved (type: {answer_type}) ===")
-        for i in range(3):
-            print(f"--- Context {i+1} ---")
-            print(context[i][:500].strip())  # tampilkan potongan isi
-            print(f"\n📚 Source: {source[i]}\n")
-            print("-" * 60)
+        # print(f"=== Context Retrieved (type: {answer_type}) ===")
+        # for i in range(3):
+        #     print(f"--- Context {i+1} ---")
+        #     print(context[i][:500].strip()) 
+        #     print(f"\n📚 Source: {source[i]}\n")
+        #     print("-" * 60)
 
         response = infer(question, context_combined, source, answer_type)
         print("=== Chatbot Response ===")
@@ -152,7 +151,11 @@ def main(question):
 
     end_total = time.time()
     print("Total Runtime :", f"{end_total - start_total:.2f} detik")
-    llm.close()
 
 if __name__ == "__main__":
-    main("Siapa saja yang termasuk subjek pajak dalam negeri?")
+    while True:
+        question = input("User: ")
+        if question.lower() in ["exit", "quit"]:
+            print("Bye!")
+            break
+        main(question)

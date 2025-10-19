@@ -21,18 +21,20 @@ Berisi model dasar yang diunduh dari **Hugging Face** dan digunakan sebagai star
 Berisi seluruh komponen utama untuk menjalankan **pipeline chatbot RAG**.
 
 #### Struktur:
+```
 chatbot/
 │
 ├── database/   # Berisi ChromaDB untuk penyimpanan embedding dan hasil indexing
 ├── model/      # Menyimpan embedding model dan chatbot model (fine-tuned)
 └── main.py     # Pipeline utama untuk menjalankan sistem chatbot RAG
-
+```
 ---
 
 ### **3. process_dataset/**
 Berisi kode untuk **membersihkan dataset**, **memproses data**, dan **menghasilkan synthetic dataset**.
 
 #### Struktur:
+```
 process_dataset/
 │
 ├── dataset/ # Dataset yang sudah diproses
@@ -42,13 +44,14 @@ process_dataset/
 ├── convert_dataset_to_llama_ds.py # Mengubah dataset ke format kompatibel dengan LLaMA
 ├── extract_text_from_sdsn_pdf.py # Mengekstrak teks dari file PDF SDSN
 └── generate_synthetic_dataset_using_llm.py # Membuat synthetic dataset menggunakan model LLaMA
-
+```
 ---
 
 ### **4. rag_model/**
 Berisi semua kode yang berkaitan dengan **RAG (Retrieval-Augmented Generation)**.
 
 #### Struktur:
+```
 rag_model/
 │
 ├── database/                        # Menyimpan Chroma database dan database embedding model
@@ -59,13 +62,14 @@ rag_model/
 ├── generate_dataset.py               # Menghasilkan dataset berbasis chunk untuk fine-tuning embedding model
 ├── test_rag.py                       # Menguji performa query RAG
 └── view_chunk.py                     # Melihat hasil chunking data
-
+```
 ---
 
 ### **5. training_model/**
 Berisi kode dan notebook untuk **training dan fine-tuning model**.
 
 #### Struktur:
+```
 training_model/
 │
 ├── dataset/ # Dataset untuk training
@@ -76,7 +80,7 @@ training_model/
 ├── test_model_using_transformers.py                    # Testing model hasil training dengan library Transformers
 ├── training_model_using_SFTTrainer.ipynb               # Fine-tuning menggunakan SFTTrainer
 └── training_model_using_Trainer.ipynb                  # Fine-tuning menggunakan Trainer
-
+```
 ---
 
 ## Lingkungan dan Konfigurasi

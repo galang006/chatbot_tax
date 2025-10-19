@@ -8,3 +8,4 @@
 /training_model/unsloth_compiled_cache
 .env
 __pycache__/
+/base_models

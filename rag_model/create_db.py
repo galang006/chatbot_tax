@@ -6,8 +6,8 @@ import json
 import os
 import shutil
 
-CHROMA_PATH = "database/chroma_uu_db_indo"
-FOLDER_PATH = "/home/ubuntu/projek_chatbot_galang/process_dataset/dataset/uu_per_ayat"  
+CHROMA_PATH = "database/chroma_uu_db_indo_v2"
+FOLDER_PATH = "/home/ubuntu/projek_chatbot_galang/process_dataset/dataset/"  
 
 def load_documents():
     documents = []

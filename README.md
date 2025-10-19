@@ -10,12 +10,26 @@ Sistem RAG dikembangkan dengan menggunakan model embedding **LazarusNLP/all-indo
 
 ## 📁 Struktur Folder
 
+---
+
 ### **1. base_model/**
 Berisi model dasar yang diunduh dari **Hugging Face** dan digunakan sebagai starting point sebelum fine-tuning.
 
 ---
 
-### **2. process_dataset/**
+### **2. base_model/**
+Berisi seluruh komponen utama untuk menjalankan **pipeline chatbot RAG**.
+
+#### Struktur:
+chatbot/
+│
+├── database/   # Berisi ChromaDB untuk penyimpanan embedding dan hasil indexing
+├── model/      # Menyimpan embedding model dan chatbot model (fine-tuned)
+└── main.py     # Pipeline utama untuk menjalankan sistem chatbot RAG
+
+---
+
+### **3. process_dataset/**
 Berisi kode untuk **membersihkan dataset**, **memproses data**, dan **menghasilkan synthetic dataset**.
 
 #### Struktur:
@@ -31,7 +45,7 @@ process_dataset/
 
 ---
 
-### **3. rag_model/**
+### **4. rag_model/**
 Berisi semua kode yang berkaitan dengan **RAG (Retrieval-Augmented Generation)**.
 
 #### Struktur:
@@ -48,7 +62,7 @@ rag_model/
 
 ---
 
-### **4. training_model/**
+### **5. training_model/**
 Berisi kode dan notebook untuk **training dan fine-tuning model**.
 
 #### Struktur:
@@ -158,7 +172,7 @@ Daftar Undang-Undang yang digunakan:
    - Model diubah ke format **GGUF** menggunakan **Llama.cpp** agar lebih ringan dan efisien.  
    - Hasil:
      ```
-     /projek_chatbot_galang/rag_model/model/taxbot_v8.gguf
+     chatbot/model/taxbot_v8.gguf
      ```
 
 ---
@@ -170,7 +184,7 @@ Daftar Undang-Undang yang digunakan:
    - Chunk size: **500**  
    - Hasil database:
      ```
-     chroma_uu_db_indo_v2
+     chatbot/database/chroma_uu_db_indo_v2
      ```
 
 6. **Generate Dataset untuk Fine-Tuning Embedding Model**
@@ -194,13 +208,13 @@ Daftar Undang-Undang yang digunakan:
    - Base model: `LazarusNLP/all-indo-e5-small-v4`  
    - Hasil model fine-tune:
      ```
-     rag_model/model/all-indo-e5-small-v4-matryoshka-v2
+     chatbot/model/all-indo-e5-small-v4-matryoshka-v2
      ```
 
 8. **Integrasi ke Pipeline RAG**
    - Semua komponen (base model, fine-tuned chat model, dan embedding model) digabungkan dalam satu pipeline:
      ```
-     rag_model/main.py
+     chatbot/main.py
      ```
 
 ---
@@ -210,6 +224,6 @@ Daftar Undang-Undang yang digunakan:
 - Chat model: `taxbot_v8.gguf`
 - Embedding model: `all-indo-e5-small-v4-matryoshka-v2`
 - Database: `chroma_uu_db_indo_v2`
-- Final pipeline: `rag_model/main.py`
+- Final pipeline: `chatbot/main.py`
 
 ---

@@ -6,7 +6,7 @@ import json
 import os
 import shutil
 
-CHROMA_PATH = "database/chroma_uu_db_indo_v2"
+CHROMA_PATH = "database/chroma_uu_db_indo_v3"
 FOLDER_PATH = "/home/ubuntu/projek_chatbot_galang/process_dataset/dataset/"  
 
 def load_documents():
@@ -18,8 +18,7 @@ def load_documents():
                 data_list = json.load(f) 
                 for data in data_list:     
                     text = f"""
-                    Isi: {data.get('Isi', '')}
-                    Penjelasan: {data.get('Penjelasan', '')}
+                    {data.get('Isi', '')} Penjelasan: {data.get('Penjelasan', '')}
                     """
                     doc = Document(
                         page_content=text,
@@ -37,7 +36,7 @@ def load_documents():
 
 def split_text(documents):
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=500,
+        chunk_size=700,
         chunk_overlap=100,
         length_function=len,
         add_start_index=True

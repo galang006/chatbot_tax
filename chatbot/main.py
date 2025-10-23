@@ -5,9 +5,12 @@ from tqdm import tqdm
 import time
 
 CHROMA_PATH = "database/chroma_uu_db_indo_v2"
+#CHROMA_PATH = "chatbot/database/chroma_uu_db_indo_v2"
 
 llm = Llama(
-    model_path="model/taxbot_v8.gguf",
+    model_path="model/taxbot_v9_dpo_v2.gguf",
+    #model_path="model/taxbot_v9.gguf",
+    #model_path="chatbot/model/taxbot_v9.gguf",
     n_ctx=2048,
     verbose=False,
     device = "cpu"
@@ -29,64 +32,55 @@ def build_context_from_db(db, query, top_k=5):
     
     results = db.similarity_search_with_score(query, k=top_k)
     if len(results) == 0 or results[0][1] > 13:
-        return "Maaf, tidak ada data yang relevan ditemukan.", ["none"], "none"
+        return "Maaf, tidak ada data relevan.", ["none"], "none"
 
-    elif results[0][1] <= 9:
-        answer_type = "specific" 
-    elif results[0][1] > 9 and results[0][1] <= 13:
-        answer_type = "complex"
-    else:
-        answer_type = "none"
-
-    context_texts = []
+    structured_contexts = []
     source_list = []
-    scores = []
 
-    for doc, score in results:
-        scores.append(score)
+    for i, (doc, score) in enumerate(results):
         meta = doc.metadata
-        context_texts.append(
-            f"{doc.page_content}\n"
-        )
-        source_texts = (
-            f"{meta.get('uu', '')} "
-            f"{meta.get('pasal', '')} "
-            f"Ayat {meta.get('ayat', '')}\n"
-            f"Sumber: {meta.get('sumber', '')}; "
-            f"Relevance Score: {score:.2f}"
-        )
-        source_list.append(source_texts)
+        uu = meta.get("uu", "")
+        pasal = meta.get("pasal", "")
+        ayat = meta.get("ayat", "")
+        sumber = meta.get("sumber", "")
+        structured_contexts.append(
+            f"""
+            Konteks {i+1}:
+            {uu} {pasal} Ayat {ayat}
+            (Sumber: {sumber}, Skor: {score:.2f})
 
-    return context_texts, source_list, answer_type
+            Isi dan/atau Penjelasan:
+            {doc.page_content.strip()}
+            """
+            )
+        source_list.append(f"UU {uu} Pasal {pasal} Ayat {ayat}")
 
-def infer(question, context, source,answer_type="specific"):
+    return structured_contexts, source_list, "true"
+
+def infer(question, context, source):
     """
     Jalankan LLaMA dengan prompt sesuai tipe jawaban
     """
-    SYSTEM_TEMPLATE = f"""
-    Jawab pertanyaan berdasarkan konteks berikut:
+    SYSTEM_TEMPLATE = f"""Jawab pertanyaan berdasarkan konteks berikut:
     {context}
 
     Kamu adalah asisten ahli pajak Indonesia.
     Jawaban harus faktual, to the point, dan menggunakan bahasa formal.
-    Jika informasi tidak ada atau pertanyaan tidak berkaitan dengan pajak,
+    Jika informasi tidak ada dikonteks atau pertanyaan tidak berkaitan dengan pajak,
     jawab: "Maaf, saya tidak memiliki pemahaman tentang hal itu."
 
     Sumber konteks: {source}
 
-    ------------------------------------------------------------
     Bila jawaban ditemukan dengan jelas di konteks:
     - Sertakan sumber pasal di akhir kalimat dengan cara yang natural,
-    misalnya: "sesuai dengan Pasal ... UU Nomor ... Tahun ....".
+    misalnya: "sesuai dengan Pasal {{pasal}} UU Nomor {{ayat}} Tahun {{tahun}}".
     - Sertakan sumber hukum dengan format:
     Source: Pasal {{pasal}} Ayat {{ayat}} UU {{uu}}.
 
-    ------------------------------------------------------------
     Bila jawaban tidak ditemukan dengan jelas di konteks:
     Gunakan FORMAT JAWABAN AKHIR berikut:
 
     Sources Used:
-    {source}
     [Daftar sumber UU yang digunakan (minimal 2)]
 
     Summary:
@@ -103,7 +97,6 @@ def infer(question, context, source,answer_type="specific"):
     [[ Recommendation ]]
     [Tulis rekomendasi, JIKA analisis berfokus pada usulan aksi,
     kebijakan, atau langkah perbaikan di masa depan.]
-    ------------------------------------------------------------
     """
 
     messages = [
@@ -129,6 +122,7 @@ def main(question):
 
     embedding_function = HuggingFaceEmbeddings(
         model_name="model/all-indo-e5-small-v4-matryoshka-v2",
+        #model_name="chatbot/model/all-indo-e5-small-v4-matryoshka-v2",
         model_kwargs={"device": "cpu"}
     )
     db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
@@ -139,12 +133,12 @@ def main(question):
     if answer_type != 'none':
         print(f"=== Context Retrieved (type: {answer_type}) ===")
         for i in range(3):
-            print(f"--- Context {i+1} ---")
+            # print(f"--- Context {i+1} ---")
             print(context[i][:500].strip()) 
             print(f"\n📚 Source: {source[i]}\n")
             print("-" * 60)
 
-        response = infer(question, context_combined, source, answer_type)
+        response = infer(question, context_combined, source)
         print("=== Chatbot Response ===")
         print(response)
     

@@ -2,12 +2,13 @@
 /process_dataset/dataset
 /llama.cpp
 /rag_model/database
-/rag_model/model
 /training_model/dataset
-/training_model/model
-/training_model/unsloth_compiled_cache
 .env
 __pycache__/
 /base_models
 chatbot/database
-chatbot/model
+model/
+rlhf/data_prep/dataset
+training_model/dataset
+models/
+unsloth_compiled_cache/

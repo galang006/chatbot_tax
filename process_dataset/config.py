@@ -95,3 +95,4 @@ Isi Pasal:
 Pertanyaan: {question}
 
 Jawaban:"""
+

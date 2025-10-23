@@ -6,7 +6,7 @@ from tqdm import tqdm
 import os
 
 CHROMA_PATH = "database/chroma_uu_db_indo_v2"
-OUTPUT_JSONL = "generated_qa_dataset_v2.jsonl"
+OUTPUT_JSONL = "database/generated_qa_dataset_v4.jsonl"
 
 embedding_function = HuggingFaceEmbeddings(
     model_name="LazarusNLP/all-indo-e5-small-v4",

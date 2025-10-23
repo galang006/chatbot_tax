@@ -3,7 +3,7 @@ from langchain_huggingface import HuggingFaceEmbeddings
 import json
 import os
 
-CHROMA_PATH = "database/chroma_uu_db_indo"
+CHROMA_PATH = "database/chroma_uu_db_indo_v3"
 
 embedding_function = HuggingFaceEmbeddings(
     model_name="LazarusNLP/all-indo-e5-small-v4",
@@ -37,7 +37,7 @@ def preview_chunks(limit=5, save_to_json=False):
         print(f"Pasal: {meta.get('pasal', '-')}")
         print(f"Ayat: {meta.get('ayat', '-')}")
         print(f"Sumber: {meta.get('sumber', '-')}")
-        print(f"\nIsi Chunk (awal):\n{content[:500]}...")
+        print(f"\nIsi Chunk (awal):\n{content[:700]}...")
         print("-" * 80)
 
     if save_to_json:
